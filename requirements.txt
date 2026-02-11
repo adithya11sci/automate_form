@@ -4,10 +4,11 @@ motor
 beanie
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt
+email-validator
 python-multipart
 pydantic
 pydantic-settings
 aiofiles
 httpx
 python-dotenv
-# Heavy AI libraries removed for Vercel Lite
