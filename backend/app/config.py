@@ -11,13 +11,14 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Database
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017/autofill_pro")
+MONGODB_URL = os.getenv("MONGODB_URI", "mongodb://localhost:27017/autofill_pro")
 
 
 # JWT Settings
-SECRET_KEY = os.getenv("SECRET_KEY", "autofill-gform-pro-secret-key-change-in-production-2024")
+SECRET_KEY = os.getenv("JWT_SECRET", "autofill-gform-pro-secret-key-change-in-production-2024")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+
 
 # AI Settings
 # Set to "local", "openai", or "grok"
