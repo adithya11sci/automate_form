@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: autofill-gform-pro
+    env: docker
+    plan: free
+    dockerFilePath: Dockerfile
+    # Render will automatically pass correct PORT
+    envVars:
+      - key: AI_MODE
+        value: grok
+      - key: GROK_API_KEY
+        sync: false
+      - key: HEADLESS
+        value: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SLOW_MO
+        value: 100

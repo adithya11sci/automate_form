@@ -40,9 +40,12 @@ ENV PYTHONPATH=/app
 ENV HEADLESS=true
 ENV PYTHONUNBUFFERED=1
 
-# Expose the port
+# Make the script executable
+RUN chmod +x start_app.sh
+
+# Expose the default port (Render will override this)
 EXPOSE 7860
 
-# Run the application
-# Hugging Face Spaces uses port 7860 by default
-CMD ["uvicorn", "backend.app.main:app", "--host", "0.0.0.0", "--port", "7860"]
+# Run the startup script
+CMD ["/bin/bash", "./start_app.sh"]
+
