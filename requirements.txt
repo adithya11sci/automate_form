@@ -1,6 +1,7 @@
 fastapi
 uvicorn[standard]
-sqlalchemy
+motor
+beanie
 python-jose[cryptography]
 passlib[bcrypt]
 python-multipart
