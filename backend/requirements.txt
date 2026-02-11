@@ -2,16 +2,14 @@ fastapi
 uvicorn[standard]
 motor
 beanie
+dnspython
 python-jose[cryptography]
 passlib[bcrypt]
+bcrypt
+email-validator
 python-multipart
 pydantic
 pydantic-settings
 aiofiles
 httpx
 python-dotenv
-# Heavy AI/Automation libraries removed for Vercel Lite
-# playwright
-# sentence-transformers
-# scikit-learn
-# numpy

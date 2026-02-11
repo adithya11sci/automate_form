@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 motor
 beanie
+dnspython
 python-jose[cryptography]
 passlib[bcrypt]
 bcrypt

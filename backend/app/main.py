@@ -45,15 +45,10 @@ app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="css")
 app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
 
 
-@app.on_event("startup")
-async def on_startup():
-    """Initialize database on startup."""
-    await init_db()
-    print("✅ Database initialized")
-    print("🚀 AutoFill-GForm Pro is running!")
+@app.get("/api/ping")
+async def ping():
+    return {"status": "pong", "message": "Server is alive"}
 
-
-# Frontend page routes
 @app.get("/")
 async def serve_index():
     return FileResponse(str(FRONTEND_DIR / "index.html"))
