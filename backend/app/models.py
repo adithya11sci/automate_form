@@ -17,7 +17,7 @@ class User(Document):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
-        name = "users"
+        name = "autofill_users"
 
 
 class UserProfile(Document):
@@ -45,7 +45,7 @@ class UserProfile(Document):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
-        name = "user_profiles"
+        name = "autofill_profiles"
 
 
 class FormHistory(Document):
@@ -64,7 +64,7 @@ class FormHistory(Document):
     completed_at: Optional[datetime] = None
 
     class Settings:
-        name = "form_history"
+        name = "autofill_history"
 
 
 class LearnedMapping(Document):
@@ -79,4 +79,4 @@ class LearnedMapping(Document):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     class Settings:
-        name = "learned_mappings"
+        name = "autofill_knowledge"
