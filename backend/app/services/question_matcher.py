@@ -1,11 +1,17 @@
 """
-Smart Question Matcher — Maps form questions to user profile fields
-using sentence embeddings and fuzzy matching. No hardcoding.
+Smart Question Matcher — Maps form questions to user profile fields.
+Supports fallback to simple matching if heavy ML libraries are missing (Lite mode).
 """
 import re
 from typing import Optional, Tuple, Dict, List
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
+
+# Try imports for heavy ML features
+try:
+    from sklearn.metrics.pairwise import cosine_similarity
+    import numpy as np
+    HAS_ML = True
+except ImportError:
+    HAS_ML = False
 
 # Lazy-loaded model
 _model = None
@@ -17,8 +23,11 @@ def _get_model():
     """Lazy load the sentence transformer model."""
     global _model
     if _model is None:
-        from sentence_transformers import SentenceTransformer
-        _model = SentenceTransformer("all-MiniLM-L6-v2")
+        try:
+            from sentence_transformers import SentenceTransformer
+            _model = SentenceTransformer("all-MiniLM-L6-v2")
+        except ImportError:
+            _model = None
     return _model
 
 
@@ -83,8 +92,11 @@ FIELD_DESCRIPTIONS: Dict[str, List[str]] = {
 def _get_field_embeddings():
     """Compute and cache embeddings for all field descriptions."""
     global _field_embeddings, _field_descriptions
+    model = _get_model()
+    if model is None:
+        return None, None
+        
     if _field_embeddings is None:
-        model = _get_model()
         _field_descriptions = {}
         all_texts = []
         for field_name, descriptions in FIELD_DESCRIPTIONS.items():
@@ -95,15 +107,28 @@ def _get_field_embeddings():
     return _field_embeddings, _field_descriptions
 
 
+def _simple_match(question: str) -> Optional[str]:
+    """Fallback simple string matching logic."""
+    q = question.lower()
+    for field, keywords in FIELD_DESCRIPTIONS.items():
+        if any(kw in q for kw in keywords):
+            return field
+    return None
+
+
 def match_question_to_field(question: str, threshold: float = 0.45) -> Tuple[Optional[str], float]:
-    """
-    Match a form question to a profile field using sentence embeddings.
-    
-    Returns:
-        (field_name, confidence_score) or (None, 0.0) if no match
-    """
+    """Match a form question using embeddings or simple fallback."""
     model = _get_model()
+    
+    # Fallback to simple matching if ML libraries are missing
+    if not HAS_ML or model is None:
+        matched = _simple_match(question)
+        return matched, 1.0 if matched else 0.0
+
     embeddings, field_map = _get_field_embeddings()
+    if embeddings is None:
+        matched = _simple_match(question)
+        return matched, 0.9 if matched else 0.0
 
     # Clean question
     clean_q = re.sub(r'[*\n\r]+', ' ', question).strip().lower()
@@ -127,22 +152,22 @@ def match_question_to_field(question: str, threshold: float = 0.45) -> Tuple[Opt
 
 
 def match_question_batch(questions: List[str], threshold: float = 0.45) -> List[Tuple[Optional[str], float]]:
-    """
-    Match multiple questions to profile fields efficiently in batch.
-    
-    Returns:
-        List of (field_name, confidence_score) tuples
-    """
+    """Match multiple questions (Lite optimized)."""
     model = _get_model()
+    
+    if not HAS_ML or model is None:
+        return [match_question_to_field(q, threshold) for q in questions]
+
     embeddings, field_map = _get_field_embeddings()
+    if embeddings is None:
+        return [match_question_to_field(q, threshold) for q in questions]
 
     # Clean questions
     clean_questions = [re.sub(r'[*\n\r]+', ' ', q).strip().lower() for q in questions]
-    
     if not clean_questions:
         return []
 
-    # Encode all questions at once
+    # Encode all questions
     q_embeddings = model.encode(clean_questions, normalize_embeddings=True)
 
     # Compute similarities
