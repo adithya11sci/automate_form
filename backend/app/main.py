@@ -1,7 +1,7 @@
 """
 AutoFill-GForm Pro — FastAPI Application Entry Point
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
@@ -17,7 +17,16 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Middleware to ensure DB connection on every request (Needed for Vercel)
+@app.middleware("http")
+async def db_session_middleware(request: Request, call_next):
+    if not request.url.path.startswith("/css") and not request.url.path.startswith("/js"):
+        await init_db()
+    response = await call_next(request)
+    return response
+
 # CORS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
