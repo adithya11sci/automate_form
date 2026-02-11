@@ -2,6 +2,7 @@ import motor.motor_asyncio
 from beanie import init_beanie
 from app.config import MONGODB_URL
 from app.models import User, UserProfile, FormHistory, LearnedMapping
+import asyncio
 
 # Global initialized flag
 _initialized = False
@@ -16,7 +17,8 @@ async def init_db():
         # Standard Motor connection - works best on Vercel
         client = motor.motor_asyncio.AsyncIOMotorClient(
             MONGODB_URL,
-            serverSelectionTimeoutMS=5000
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000
         )
         database = client.get_default_database()
         
@@ -30,8 +32,8 @@ async def init_db():
             ]
         )
         _initialized = True
-        print("✅ DB Connected")
+        print(f"✅ DB Connected to: {database.name}")
     except Exception as e:
         print(f"❌ DB Error: {e}")
-        # We don't raise here so we can still see the /api/ping test
-        pass
+        # Raising the error so the middleware catches it and shows it in diagnostic mode
+        raise Exception(f"MongoDB Connection Failed: {str(e)}. Please check your MONGODB_URI and IP Whitelist.")

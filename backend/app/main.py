@@ -9,29 +9,33 @@ from fastapi.middleware.cors import CORSMiddleware
 STARTUP_ERROR = None
 
 try:
-    # Attempt imports
     from app.config import CORS_ORIGINS
     from app.database import init_db
     from app.routes import auth_routes, profile_routes, form_routes
 except Exception as e:
     import traceback
-    STARTUP_ERROR = f"Import Error: {str(e)}\n{traceback.format_exc()}"
+    STARTUP_ERROR = f"Startup Import Error: {str(e)}\n{traceback.format_exc()}"
 
 # Initialize FastAPI
-app = FastAPI(title="AutoFill-GForm Pro Diagnostics")
+app = FastAPI(title="AutoFill-GForm Pro")
 
 # Middleware for DB & Debugging
 @app.middleware("http")
 async def diagnostic_middleware(request: Request, call_next):
-    if STARTUP_ERROR and request.url.path == "/":
-        return HTMLResponse(content=f"<h1>Startup Error</h1><pre>{STARTUP_ERROR}</pre>", status_code=500)
-    
+    # Route for health check
+    if request.url.path == "/api/ping":
+        return JSONResponse({"status": "alive", "startup_error": STARTUP_ERROR})
+
+    # Try to init DB on every API call (idempotent)
     if request.url.path.startswith("/api"):
         try:
             from app.database import init_db
             await init_db()
-        except:
-            pass
+        except Exception as db_err:
+            return JSONResponse(
+                status_code=500,
+                content={"detail": f"Database Error: {str(db_err)}", "type": "db_connection_fail"}
+            )
             
     try:
         response = await call_next(request)
@@ -40,28 +44,21 @@ async def diagnostic_middleware(request: Request, call_next):
         import traceback
         return JSONResponse(
             status_code=500,
-            content={"error": str(e), "trace": traceback.format_exc()}
+            content={"detail": str(e), "trace": traceback.format_exc()}
         )
 
 # CORS
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Only include routers if no startup error
+# Include routes
 if not STARTUP_ERROR:
-    try:
-        app.include_router(auth_routes.router)
-        app.include_router(profile_routes.router)
-        app.include_router(form_routes.router)
-    except Exception as e:
-        STARTUP_ERROR = f"Router Inclusion Error: {str(e)}"
+    app.include_router(auth_routes.router)
+    app.include_router(profile_routes.router)
+    app.include_router(form_routes.router)
 
-# Serve index or show error
+# Serve Frontend
 @app.get("/")
 async def root():
-    if STARTUP_ERROR:
-        return HTMLResponse(content=f"<h1>System Failure</h1><pre>{STARTUP_ERROR}</pre>", status_code=500)
-    
-    # Try to return the index.html from frontend
     try:
         frontend_path = Path(__file__).resolve().parent.parent.parent / "frontend" / "index.html"
         if not frontend_path.exists():
@@ -70,10 +67,24 @@ async def root():
         if frontend_path.exists():
             with open(frontend_path, "r", encoding="utf-8") as f:
                 return HTMLResponse(content=f.read())
-        return {"status": "ok", "msg": "Backend is running, but index.html was not found."}
+        return HTMLResponse(content="<h1>Backend is running</h1><p>But index.html was not found in static paths.</p>")
     except Exception as e:
-        return {"status": "ok", "error_finding_html": str(e)}
+        return JSONResponse({"error": str(e)})
 
-@app.get("/api/ping")
-async def ping():
-    return {"status": "alive", "error": STARTUP_ERROR}
+@app.get("/{full_path:path}")
+async def serve_static(full_path: str):
+    # Try to serve dashboard.html, profile.html etc.
+    frontend_path = Path(__file__).resolve().parent.parent.parent / "frontend"
+    if not frontend_path.exists():
+        frontend_path = Path("/var/task/frontend")
+        
+    file_path = frontend_path / f"{full_path}.html"
+    if file_path.exists():
+        return FileResponse(str(file_path))
+    
+    # Check for css/js folders
+    static_file = frontend_path / full_path
+    if static_file.exists() and static_file.is_file():
+        return FileResponse(str(static_file))
+        
+    return HTMLResponse(content="404 Not Found", status_code=404)
