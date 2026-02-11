@@ -7,7 +7,7 @@ import re
 import os
 from typing import Optional, Dict
 
-from app.config import AI_MODE, OPENAI_API_KEY, OPENAI_BASE_URL
+from app.config import AI_MODE, OPENAI_API_KEY, OPENAI_BASE_URL, GROK_API_KEY, GROK_BASE_URL, GROK_MODEL
 
 
 def _build_prompt(question: str, profile: Dict[str, str]) -> str:
@@ -167,15 +167,49 @@ def _generate_with_openai(question: str, profile: Dict[str, str]) -> str:
         return _generate_with_local_model(question, profile)
 
 
+def _generate_with_grok(question: str, profile: Dict[str, str]) -> str:
+    """Generate answer using Groq (Grok) API."""
+    try:
+        import httpx
+
+        prompt = _build_prompt(question, profile)
+
+        response = httpx.post(
+            f"{GROK_BASE_URL}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROK_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": GROK_MODEL,
+                "messages": [{"role": "user", "content": prompt}],
+                "max_tokens": 300,
+                "temperature": 0.7,
+            },
+            timeout=30.0,
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data["choices"][0]["message"]["content"].strip()
+    except Exception as e:
+        print(f"[AI Agent] Grok API error: {e}")
+        # Fallback to local generation
+        return _generate_with_local_model(question, profile)
+
+
 def generate_answer(question: str, profile_data: Dict[str, str]) -> str:
     """
     Generate an answer for a form question using the user's profile.
     
-    Uses OpenAI API if configured, otherwise falls back to local
+    Uses OpenAI API or Grok API if configured, otherwise falls back to local
     template-based generation with NLP understanding.
     """
+    if AI_MODE == "grok" and GROK_API_KEY:
+        return _generate_with_grok(question, profile_data)
+
     if AI_MODE == "openai" and OPENAI_API_KEY:
         return _generate_with_openai(question, profile_data)
+    
     return _generate_with_local_model(question, profile_data)
 
 

@@ -4,6 +4,9 @@ Application configuration settings.
 import os
 from pathlib import Path
 
+from dotenv import load_dotenv
+load_dotenv()
+
 # Base directory
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,11 +22,16 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
 
 # AI Settings
-# Set to "local" to use sentence-transformers locally
-# Set to "openai" to use OpenAI API
-AI_MODE = os.getenv("AI_MODE", "local")
+# Set to "local", "openai", or "grok"
+AI_MODE = os.getenv("AI_MODE", "grok")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+
+# Grok (via Groq) Settings
+GROK_API_KEY = os.getenv("GROK_API_KEY", "")
+GROK_BASE_URL = "https://api.groq.com/openai/v1"
+GROK_MODEL = "llama3-70b-8192"
+
 
 # Playwright settings
 HEADLESS = os.getenv("HEADLESS", "true").lower() == "true"
