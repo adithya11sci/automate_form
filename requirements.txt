@@ -7,10 +7,7 @@ passlib[bcrypt]
 python-multipart
 pydantic
 pydantic-settings
-playwright
-sentence-transformers
-scikit-learn
-numpy
 aiofiles
 httpx
 python-dotenv
+# Heavy AI libraries removed for Vercel Lite
