@@ -1,75 +1,79 @@
 import os
+import sys
 from pathlib import Path
 from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
 
-from app.config import CORS_ORIGINS
-from app.database import init_db
-from app.routes import auth_routes, profile_routes, form_routes
+# Global error for diagnostics
+STARTUP_ERROR = None
 
-# --- Robust Path Helper for Vercel ---
-BASE_DIR = Path(__file__).resolve().parent.parent # backend/
-ROOT_DIR = BASE_DIR.parent
-FRONTEND_DIR = ROOT_DIR / "frontend"
-
-if not FRONTEND_DIR.exists():
-    # Attempt to find frontend if pathing is different on Vercel
-    FRONTEND_DIR = Path("/var/task/frontend") 
-    if not FRONTEND_DIR.exists():
-        FRONTEND_DIR = ROOT_DIR # Fallback to root
+try:
+    # Attempt imports
+    from app.config import CORS_ORIGINS
+    from app.database import init_db
+    from app.routes import auth_routes, profile_routes, form_routes
+except Exception as e:
+    import traceback
+    STARTUP_ERROR = f"Import Error: {str(e)}\n{traceback.format_exc()}"
 
 # Initialize FastAPI
-app = FastAPI(title="AutoFill-GForm Pro", version="1.0.0")
+app = FastAPI(title="AutoFill-GForm Pro Diagnostics")
 
-# Middleware for DB
+# Middleware for DB & Debugging
 @app.middleware("http")
-async def db_session_middleware(request: Request, call_next):
-    # Only init DB for API routes
+async def diagnostic_middleware(request: Request, call_next):
+    if STARTUP_ERROR and request.url.path == "/":
+        return HTMLResponse(content=f"<h1>Startup Error</h1><pre>{STARTUP_ERROR}</pre>", status_code=500)
+    
     if request.url.path.startswith("/api"):
-        await init_db()
+        try:
+            from app.database import init_db
+            await init_db()
+        except:
+            pass
+            
     try:
         response = await call_next(request)
         return response
     except Exception as e:
+        import traceback
         return JSONResponse(
             status_code=500,
-            content={"detail": str(e), "msg": "Critial Error in Middleware"}
+            content={"error": str(e), "trace": traceback.format_exc()}
         )
 
 # CORS
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
-# Include routes
-app.include_router(auth_routes.router)
-app.include_router(profile_routes.router)
-app.include_router(form_routes.router)
+# Only include routers if no startup error
+if not STARTUP_ERROR:
+    try:
+        app.include_router(auth_routes.router)
+        app.include_router(profile_routes.router)
+        app.include_router(form_routes.router)
+    except Exception as e:
+        STARTUP_ERROR = f"Router Inclusion Error: {str(e)}"
 
-# Serve Frontend
+# Serve index or show error
 @app.get("/")
-async def serve_index():
-    return FileResponse(str(FRONTEND_DIR / "index.html"))
-
-@app.get("/dashboard")
-async def serve_dashboard():
-    return FileResponse(str(FRONTEND_DIR / "dashboard.html"))
-
-@app.get("/profile")
-async def serve_profile():
-    return FileResponse(str(FRONTEND_DIR / "profile.html"))
-
-@app.get("/history")
-async def serve_history():
-    return FileResponse(str(FRONTEND_DIR / "history.html"))
-
-# Static Files - wrapping in try/except to prevent 500 if folder missing
-try:
-    app.mount("/css", StaticFiles(directory=str(FRONTEND_DIR / "css")), name="css")
-    app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
-except:
-    pass
+async def root():
+    if STARTUP_ERROR:
+        return HTMLResponse(content=f"<h1>System Failure</h1><pre>{STARTUP_ERROR}</pre>", status_code=500)
+    
+    # Try to return the index.html from frontend
+    try:
+        frontend_path = Path(__file__).resolve().parent.parent.parent / "frontend" / "index.html"
+        if not frontend_path.exists():
+             frontend_path = Path("/var/task/frontend/index.html")
+             
+        if frontend_path.exists():
+            with open(frontend_path, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+        return {"status": "ok", "msg": "Backend is running, but index.html was not found."}
+    except Exception as e:
+        return {"status": "ok", "error_finding_html": str(e)}
 
 @app.get("/api/ping")
 async def ping():
-    return {"status": "ok", "db_url_set": bool(os.getenv("MONGODB_URI"))}
+    return {"status": "alive", "error": STARTUP_ERROR}
