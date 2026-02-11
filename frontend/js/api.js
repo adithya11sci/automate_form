@@ -44,16 +44,23 @@ class ApiClient {
         }
 
         const res = await fetch(`${API_BASE}${path}`, opts);
-        const data = await res.json();
+
+        let data;
+        try {
+            data = await res.json();
+        } catch (e) {
+            data = { detail: `Server error (${res.status})` };
+        }
 
         if (!res.ok) {
             if (res.status === 401) {
                 this.clearToken();
                 window.location.href = '/';
             }
-            throw new Error(data.detail || 'Request failed');
+            throw new Error(data.detail || `Request failed with status ${res.status}`);
         }
         return data;
+
     }
 
     // Auth
