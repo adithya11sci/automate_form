@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AutoFill-GForm Pro Dashboard — Fill Google Forms automatically with AI">
+    <title>Dashboard | AutoFill-GForm Pro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a class="navbar-brand" href="/dashboard">
+                    <span class="logo-icon">⚡</span>
+                    AutoFill-GForm Pro
+                </a>
+                <ul class="navbar-nav">
+                    <li><a class="nav-link active" href="/dashboard">🏠 Dashboard</a></li>
+                    <li><a class="nav-link" href="/profile">👤 Profile</a></li>
+                    <li><a class="nav-link" href="/history">📋 History</a></li>
+                    <li>
+                        <div class="nav-user">
+                            <span class="avatar" id="nav-avatar">U</span>
+                            <span id="nav-username">User</span>
+                        </div>
+                    </li>
+                    <li><button class="nav-link nav-logout" onclick="logout()">↪ Logout</button></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="page-content">
+            <!-- Hero -->
+            <div class="dashboard-hero">
+                <h1>⚡ Auto Fill Google Forms</h1>
+                <p>Paste a Google Form link and let AI fill it for you automatically</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon purple">📄</div>
+                    <div>
+                        <div class="stat-value" id="stat-total">0</div>
+                        <div class="stat-label">Total Forms</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon green">✅</div>
+                    <div>
+                        <div class="stat-value" id="stat-completed">0</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon yellow">🤖</div>
+                    <div>
+                        <div class="stat-value" id="stat-ai">0</div>
+                        <div class="stat-label">AI Answers</div>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon blue">📝</div>
+                    <div>
+                        <div class="stat-value" id="stat-filled">0</div>
+                        <div class="stat-label">Fields Filled</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fill Form Card -->
+            <div class="card fill-card">
+                <div class="card-header">
+                    <h3 class="card-title">🔗 Enter Google Form Link</h3>
+                </div>
+                <form id="fill-form">
+                    <div class="fill-input-row">
+                        <input type="url" class="form-input" id="form-url"
+                            placeholder="https://docs.google.com/forms/d/e/xxxxx/viewform" required>
+                        <button type="submit" class="btn btn-primary" id="fill-btn">⚡ Auto Fill</button>
+                    </div>
+                    <div class="fill-options">
+                        <div class="toggle-wrapper">
+                            <div class="toggle" id="auto-submit-toggle"></div>
+                            <span class="toggle-label">Auto-submit after filling</span>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Status Panel -->
+            <div class="card status-panel" id="status-panel">
+                <div class="card-header">
+                    <div class="status-header">
+                        <h3 class="card-title" id="status-title">Processing...</h3>
+                        <span class="status-badge pending" id="status-badge">
+                            <span class="pulse"></span> PENDING
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Progress -->
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                </div>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:1rem;" id="progress-text">
+                    Waiting for results...
+                </p>
+
+                <!-- Error -->
+                <div id="error-row"
+                    style="display:none;padding:12px;background:var(--error-bg);border-radius:8px;color:var(--error);margin-bottom:1rem;align-items:center;gap:8px;">
+                    ⚠ <span id="error-message"></span>
+                </div>
+
+                <!-- Log Table -->
+                <div style="overflow-x:auto;">
+                    <table class="log-table">
+                        <thead>
+                            <tr>
+                                <th>Question</th>
+                                <th>Type</th>
+                                <th>Answer</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-body">
+                            <tr>
+                                <td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                                    Waiting for form filling to start...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/dashboard.js"></script>
+</body>
+
+</html>

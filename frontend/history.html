@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AutoFill-GForm Pro — View your form filling history and detailed logs">
+    <title>History | AutoFill-GForm Pro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a class="navbar-brand" href="/dashboard">
+                    <span class="logo-icon">⚡</span>
+                    AutoFill-GForm Pro
+                </a>
+                <ul class="navbar-nav">
+                    <li><a class="nav-link" href="/dashboard">🏠 Dashboard</a></li>
+                    <li><a class="nav-link" href="/profile">👤 Profile</a></li>
+                    <li><a class="nav-link active" href="/history">📋 History</a></li>
+                    <li>
+                        <div class="nav-user">
+                            <span class="avatar" id="nav-avatar">U</span>
+                            <span id="nav-username">User</span>
+                        </div>
+                    </li>
+                    <li><button class="nav-link nav-logout" onclick="logout()">↪ Logout</button></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="page-content">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;">
+                <div>
+                    <h1 style="margin-bottom:0.5rem;">📋 Form History</h1>
+                    <p style="color:var(--text-secondary);">View all your past form fill operations with detailed logs
+                    </p>
+                </div>
+                <a href="/dashboard" class="btn btn-primary">⚡ Fill New Form</a>
+            </div>
+
+            <div class="history-list" id="history-list">
+                <div style="text-align:center;padding:3rem;">
+                    <div class="spinner spinner-lg" style="margin:0 auto;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-content" id="detail-content">
+            <!-- Filled by JS -->
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/history.js"></script>
+</body>
+
+</html>

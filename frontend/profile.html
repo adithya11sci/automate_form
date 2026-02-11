@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AutoFill-GForm Pro — Manage your profile data used for automatic form filling">
+    <title>Profile | AutoFill-GForm Pro</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-inner">
+                <a class="navbar-brand" href="/dashboard">
+                    <span class="logo-icon">⚡</span>
+                    AutoFill-GForm Pro
+                </a>
+                <ul class="navbar-nav">
+                    <li><a class="nav-link" href="/dashboard">🏠 Dashboard</a></li>
+                    <li><a class="nav-link active" href="/profile">👤 Profile</a></li>
+                    <li><a class="nav-link" href="/history">📋 History</a></li>
+                    <li>
+                        <div class="nav-user">
+                            <span class="avatar" id="nav-avatar">U</span>
+                            <span id="nav-username">User</span>
+                        </div>
+                    </li>
+                    <li><button class="nav-link nav-logout" onclick="logout()">↪ Logout</button></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="page-content">
+            <div style="margin-bottom:2rem;">
+                <h1 style="margin-bottom:0.5rem;">👤 Your Profile</h1>
+                <p style="color:var(--text-secondary);">This data is used to automatically fill your Google Forms. Keep
+                    it accurate and complete.</p>
+            </div>
+
+            <div class="card">
+                <form id="profile-form">
+                    <div class="profile-grid">
+                        <!-- Row 1 -->
+                        <div class="form-group">
+                            <label class="form-label" for="full_name">Full Name *</label>
+                            <input type="text" class="form-input" id="full_name" placeholder="e.g. John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="register_number">Register / Roll Number</label>
+                            <input type="text" class="form-input" id="register_number" placeholder="e.g. 2024CS001">
+                        </div>
+
+                        <!-- Row 2 -->
+                        <div class="form-group">
+                            <label class="form-label" for="department">Department</label>
+                            <input type="text" class="form-input" id="department" placeholder="e.g. Computer Science">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="year">Year</label>
+                            <select class="form-select" id="year">
+                                <option value="">Select Year</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                                <option value="5th Year">5th Year</option>
+                                <option value="Graduated">Graduated</option>
+                            </select>
+                        </div>
+
+                        <!-- Row 3 -->
+                        <div class="form-group">
+                            <label class="form-label" for="email">Email</label>
+                            <input type="email" class="form-input" id="email" placeholder="your@email.com">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Phone Number</label>
+                            <input type="tel" class="form-input" id="phone" placeholder="+91 9876543210">
+                        </div>
+
+                        <!-- Row 4 -->
+                        <div class="form-group">
+                            <label class="form-label" for="gender">Gender</label>
+                            <select class="form-select" id="gender">
+                                <option value="">Select Gender</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Non-binary">Non-binary</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="college_name">College / University Name</label>
+                            <input type="text" class="form-input" id="college_name" placeholder="e.g. MIT, Harvard">
+                        </div>
+
+                        <!-- Full width fields -->
+                        <div class="form-group full-width">
+                            <label class="form-label" for="address">Address</label>
+                            <input type="text" class="form-input" id="address" placeholder="Your city / full address">
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label" for="skills">Skills</label>
+                            <textarea class="form-textarea" id="skills" rows="2"
+                                placeholder="e.g. Python, React, Machine Learning, Data Analysis"></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label" for="interests">Interests</label>
+                            <textarea class="form-textarea" id="interests" rows="2"
+                                placeholder="e.g. AI/ML, Web Development, Robotics, Open Source"></textarea>
+                        </div>
+
+                        <div class="form-group full-width">
+                            <label class="form-label" for="bio">Bio / Description
+                                <span style="color:var(--accent-secondary);font-size:0.78rem;">— IMPORTANT: Used by AI
+                                    to generate answers</span>
+                            </label>
+                            <textarea class="form-textarea" id="bio" rows="5"
+                                placeholder="Write about yourself in detail. Include your achievements, goals, experiences, projects, and anything that describes you. The AI agent uses this to generate answers for form questions it can't match to your profile fields."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="profile-actions">
+                        <button type="submit" class="btn btn-primary" id="save-btn">💾 Save Profile</button>
+                        <a href="/dashboard" class="btn btn-secondary">← Back to Dashboard</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/profile.js"></script>
+</body>
+
+</html>
