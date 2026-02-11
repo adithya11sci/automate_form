@@ -37,9 +37,9 @@ app.mount("/js", StaticFiles(directory=str(FRONTEND_DIR / "js")), name="js")
 
 
 @app.on_event("startup")
-def on_startup():
+async def on_startup():
     """Initialize database on startup."""
-    init_db()
+    await init_db()
     print("✅ Database initialized")
     print("🚀 AutoFill-GForm Pro is running!")
 

@@ -11,10 +11,8 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Database
-DATABASE_URL = f"sqlite:///{BASE_DIR / 'data' / 'autofill.db'}"
+MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017/autofill_pro")
 
-# Ensure data directory exists
-(BASE_DIR / "data").mkdir(parents=True, exist_ok=True)
 
 # JWT Settings
 SECRET_KEY = os.getenv("SECRET_KEY", "autofill-gform-pro-secret-key-change-in-production-2024")

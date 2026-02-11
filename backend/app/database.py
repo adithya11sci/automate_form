@@ -1,31 +1,20 @@
-"""
-Database setup and session management using SQLAlchemy.
-"""
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, declarative_base
-from app.config import DATABASE_URL
+import motor.motor_asyncio
+from beanie import init_beanie
+from app.config import MONGODB_URL
+from app.models import User, UserProfile, FormHistory, LearnedMapping
 
-engine = create_engine(
-    DATABASE_URL,
-    connect_args={"check_same_thread": False},  # SQLite specific
-    echo=False,
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-
-
-def get_db():
-    """Dependency that provides a database session."""
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-def init_db():
-    """Create all database tables."""
-    from app.models import User, UserProfile, FormHistory, LearnedMapping  # noqa: F401
-    Base.metadata.create_all(bind=engine)
+async def init_db():
+    """Initializes the MongoDB connection and Beanie models."""
+    client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
+    database = client.get_default_database()
+    
+    await init_beanie(
+        database=database,
+        document_models=[
+            User,
+            UserProfile,
+            FormHistory,
+            LearnedMapping
+        ]
+    )
+    print(f"✅ MongoDB Connected: {MONGODB_URL}")

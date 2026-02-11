@@ -1,10 +1,8 @@
 """
-Profile management routes.
+Async Profile management routes for MongoDB/Beanie.
 """
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
-
-from app.database import get_db
 from app.models import User, UserProfile
 from app.schemas import ProfileCreate, ProfileUpdate, ProfileResponse
 from app.auth import get_current_user
@@ -13,52 +11,54 @@ router = APIRouter(prefix="/api/profile", tags=["Profile"])
 
 
 @router.get("/", response_model=ProfileResponse)
-def get_profile(
+async def get_profile(
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
 ):
-    """Get the current user's profile."""
-    profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
+    """Get the current user's profile from MongoDB."""
+    profile = await UserProfile.find_one(UserProfile.user_id == str(current_user.id))
     if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
+        # Fallback: create empty profile if missing
+        profile = UserProfile(user_id=str(current_user.id), email=current_user.email)
+        await profile.insert()
+    
+    # Map _id manually for the response model if necessary (handled by alias)
+    # We return the object directly; Beanie/Pydantic v2 handles alias automatically
     return profile
 
 
 @router.post("/", response_model=ProfileResponse)
-def create_profile(
+async def create_or_update_profile(
     data: ProfileCreate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
 ):
-    """Create or replace user profile."""
-    profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
+    """Create or replace user profile in MongoDB."""
+    profile = await UserProfile.find_one(UserProfile.user_id == str(current_user.id))
+    
     if profile:
-        # Update existing
-        for key, value in data.model_dump().items():
-            setattr(profile, key, value)
+        # Update existing using Pydantic model_dump
+        update_data = data.model_dump()
+        update_data["updated_at"] = datetime.utcnow()
+        await profile.set(update_data)
     else:
-        profile = UserProfile(user_id=current_user.id, **data.model_dump())
-        db.add(profile)
-    db.commit()
-    db.refresh(profile)
+        # Create new
+        profile = UserProfile(user_id=str(current_user.id), **data.model_dump())
+        await profile.insert()
+        
     return profile
 
 
 @router.put("/", response_model=ProfileResponse)
-def update_profile(
+async def update_profile(
     data: ProfileUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db),
 ):
-    """Update user profile fields."""
-    profile = db.query(UserProfile).filter(UserProfile.user_id == current_user.id).first()
+    """Update user profile fields in MongoDB."""
+    profile = await UserProfile.find_one(UserProfile.user_id == str(current_user.id))
     if not profile:
         raise HTTPException(status_code=404, detail="Profile not found. Create one first.")
 
     update_data = data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(profile, key, value)
-
-    db.commit()
-    db.refresh(profile)
+    update_data["updated_at"] = datetime.utcnow()
+    await profile.set(update_data)
+    
     return profile

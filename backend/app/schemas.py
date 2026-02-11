@@ -1,5 +1,5 @@
 """
-Pydantic schemas for request/response validation.
+Pydantic schemas for request/response validation (MongoDB compatible).
 """
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Any
@@ -22,18 +22,19 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     username: str
-    user_id: int
+    user_id: str
 
 
 class UserResponse(BaseModel):
-    id: int
+    id: str = Field(alias="_id")  # MongoDB _id
     username: str
     email: str
     is_active: bool
     has_profile: bool = False
 
     class Config:
-        from_attributes = True
+        populate_by_name = True
+        json_encoders = {datetime: lambda v: v.isoformat()}
 
 
 # ─── Profile Schemas ────────────────────────────────────────
@@ -58,8 +59,8 @@ class ProfileUpdate(ProfileCreate):
 
 
 class ProfileResponse(BaseModel):
-    id: int
-    user_id: int
+    id: str = Field(alias="_id")
+    user_id: str
     full_name: str
     register_number: str
     department: str
@@ -77,7 +78,7 @@ class ProfileResponse(BaseModel):
     updated_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True
+        populate_by_name = True
 
 
 # ─── Form Schemas ────────────────────────────────────────────
@@ -87,7 +88,7 @@ class FormFillRequest(BaseModel):
 
 
 class FormFillStatusResponse(BaseModel):
-    id: int
+    id: str = Field(alias="_id")
     form_url: str
     form_title: str
     status: str
@@ -101,7 +102,7 @@ class FormFillStatusResponse(BaseModel):
     completed_at: Optional[datetime] = None
 
     class Config:
-        from_attributes = True
+        populate_by_name = True
 
 
 class FormHistoryResponse(BaseModel):
@@ -111,7 +112,7 @@ class FormHistoryResponse(BaseModel):
 
 # ─── Learned Mapping Schemas ────────────────────────────────
 class LearnedMappingResponse(BaseModel):
-    id: int
+    id: str = Field(alias="_id")
     question_text: str
     matched_field: str
     answer_value: str
@@ -119,4 +120,4 @@ class LearnedMappingResponse(BaseModel):
     times_used: int
 
     class Config:
-        from_attributes = True
+        populate_by_name = True

@@ -1,5 +1,5 @@
 """
-JWT-based authentication system.
+JWT-based authentication system for MongoDB.
 """
 from datetime import datetime, timedelta
 from typing import Optional
@@ -7,10 +7,8 @@ from typing import Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
-from sqlalchemy.orm import Session
 
 from app.config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.database import get_db
 from app.models import User
 
 security = HTTPBearer()
@@ -37,19 +35,19 @@ def decode_access_token(token: str) -> dict:
         )
 
 
-def get_current_user(
+async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db),
 ) -> User:
-    """Dependency that extracts current user from JWT token."""
+    """Dependency that extracts current user from JWT token (Async MongoDB version)."""
     payload = decode_access_token(credentials.credentials)
-    user_id: int = payload.get("user_id")
+    user_id: str = payload.get("user_id")
     if user_id is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
         )
-    user = db.query(User).filter(User.id == user_id).first()
+    
+    user = await User.get(user_id)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
