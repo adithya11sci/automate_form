@@ -13,34 +13,46 @@ router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 @router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def signup(data: UserSignup):
     """Register a new user in MongoDB."""
-    # Check if username or email already exists
-    existing_username = await User.find_one(User.username == data.username)
-    if existing_username:
-        raise HTTPException(status_code=400, detail="Username already taken")
-    
-    existing_email = await User.find_one(User.email == data.email)
-    if existing_email:
-        raise HTTPException(status_code=400, detail="Email already registered")
+    try:
+        # Check if username or email already exists
+        existing_username = await User.find_one(User.username == data.username)
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already taken")
+        
+        existing_email = await User.find_one(User.email == data.email)
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-    # Create user
-    user = User(
-        username=data.username,
-        email=data.email,
-        hashed_password=hash_password(data.password),
-    )
-    await user.insert()
+        # Create user
+        h_password = hash_password(data.password)
+        user = User(
+            username=data.username,
+            email=data.email,
+            hashed_password=h_password,
+        )
+        await user.insert()
 
-    # Create empty profile
-    profile = UserProfile(user_id=str(user.id), email=data.email)
-    await profile.insert()
+        # Create empty profile
+        profile = UserProfile(user_id=str(user.id), email=data.email)
+        await profile.insert()
 
-    # Generate token
-    token = create_access_token({"user_id": str(user.id), "username": user.username})
-    return TokenResponse(
-        access_token=token,
-        username=user.username,
-        user_id=str(user.id),
-    )
+        # Generate token
+        token = create_access_token({"user_id": str(user.id), "username": user.username})
+        return TokenResponse(
+            access_token=token,
+            username=user.username,
+            user_id=str(user.id),
+        )
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        import traceback
+        print(f"Signup Error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Signup failed: {str(e)}\n{traceback.format_exc() if 'DuplicateKey' in str(e) else ''}"
+        )
+
 
 
 @router.post("/login", response_model=TokenResponse)
